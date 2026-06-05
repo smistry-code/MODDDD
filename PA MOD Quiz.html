@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOD PA Quiz — Arcadia University</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600&display=swap');
+
+  :root {
+    --navy: #0d1b2a;
+    --deep: #1a2b3c;
+    --teal: #0f7b6c;
+    --teal-light: #13a692;
+    --gold: #d4a843;
+    --gold-light: #f0c462;
+    --red: #c0392b;
+    --green: #1e8449;
+    --bg: #f5f0e8;
+    --card: #ffffff;
+    --text: #1a1a2e;
+    --muted: #6b7280;
+    --border: #e0d9cc;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--navy);
+    color: white;
+    padding: 28px 40px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .header-left h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    letter-spacing: 0.02em;
+  }
+  .header-left p {
+    font-size: 0.8rem;
+    color: var(--gold);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .score-badge {
+    background: rgba(212,168,67,0.15);
+    border: 1px solid var(--gold);
+    border-radius: 8px;
+    padding: 8px 16px;
+    text-align: center;
+  }
+  .score-badge .score-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--gold-light);
+    line-height: 1;
+  }
+  .score-badge .score-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  #progress-text { font-size: 0.85rem; color: #a0b0c0; }
+
+  /* PROGRESS BAR */
+  .progress-bar-wrap {
+    background: var(--deep);
+    height: 5px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--gold));
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* CATEGORY FILTER */
+  .filter-bar {
+    background: var(--deep);
+    padding: 12px 40px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .filter-btn {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #a0b0c0;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-family: 'Source Sans 3', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    background: var(--teal);
+    border-color: var(--teal-light);
+    color: white;
+  }
+
+  /* MAIN */
+  .main {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 36px 24px 80px;
+  }
+
+  /* QUESTION CARD */
+  .question-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 36px 40px 32px;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+    animation: fadeUp 0.3s ease;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .q-category {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--navy);
+    color: var(--gold);
+  }
+  .q-number {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .question-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.6;
+    color: var(--navy);
+    margin-bottom: 28px;
+  }
+
+  /* OPTIONS */
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .option {
+    background: #f8f6f2;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    transition: all 0.18s;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    text-align: left;
+    width: 100%;
+    font-family: 'Source Sans 3', sans-serif;
+    color: var(--text);
+  }
+  .option:hover:not(:disabled) {
+    border-color: var(--teal);
+    background: #edf8f6;
+  }
+  .option-letter {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--navy);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .option.correct {
+    background: #eafaf1;
+    border-color: var(--green);
+  }
+  .option.correct .option-letter { background: var(--green); }
+  .option.incorrect {
+    background: #fdf0ef;
+    border-color: var(--red);
+  }
+  .option.incorrect .option-letter { background: var(--red); }
+  .option.show-correct {
+    background: #eafaf1;
+    border-color: var(--green);
+    opacity: 0.6;
+  }
+  .option.show-correct .option-letter { background: var(--green); }
+  .option:disabled { cursor: default; }
+
+  /* EXPLANATION */
+  .explanation {
+    display: none;
+    margin-top: 20px;
+    padding: 18px 20px;
+    background: #f0f4f8;
+    border-left: 4px solid var(--teal);
+    border-radius: 0 10px 10px 0;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: #2c3e50;
+    animation: fadeUp 0.25s ease;
+  }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--navy); }
+
+  /* NAV BUTTONS */
+  .nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    gap: 12px;
+  }
+  .btn {
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: 'Source Sans 3', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    letter-spacing: 0.04em;
+  }
+  .btn-primary {
+    background: var(--navy);
+    color: white;
+  }
+  .btn-primary:hover { background: var(--teal); }
+  .btn-secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--teal); color: var(--teal); }
+  .btn-gold {
+    background: var(--gold);
+    color: var(--navy);
+  }
+  .btn-gold:hover { background: var(--gold-light); }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* RESULTS SCREEN */
+  #results-screen {
+    display: none;
+    background: var(--card);
+    border-radius: 16px;
+    padding: 52px 40px;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+  #results-screen h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+  .final-score {
+    font-size: 5rem;
+    font-family: 'Playfair Display', serif;
+    color: var(--teal);
+    line-height: 1;
+    margin: 24px 0 8px;
+  }
+  .final-score span { font-size: 2rem; color: var(--muted); }
+  .grade-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+  .results-breakdown {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin: 28px 0 40px;
+    flex-wrap: wrap;
+  }
+  .breakdown-item {
+    text-align: center;
+    padding: 18px 24px;
+    background: #f8f6f2;
+    border-radius: 12px;
+    min-width: 120px;
+  }
+  .breakdown-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    line-height: 1;
+  }
+  .breakdown-num.correct-color { color: var(--green); }
+  .breakdown-num.incorrect-color { color: var(--red); }
+  .breakdown-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+  }
+
+  /* START SCREEN */
+  #start-screen {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 52px 40px;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+  #start-screen h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--navy);
+    margin-bottom: 12px;
+  }
+  #start-screen p { color: var(--muted); font-size: 1rem; margin-bottom: 8px; line-height: 1.6; }
+  .topic-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 32px 0;
+    text-align: left;
+  }
+  .topic-item {
+    background: #f8f6f2;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .topic-item .topic-name {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--navy);
+    margin-bottom: 2px;
+  }
+  .topic-item .topic-count {
+    font-size: 0.75rem;
+    color: var(--teal);
+  }
+
+  @media (max-width: 600px) {
+    .header { padding: 16px 20px; flex-wrap: wrap; gap: 10px; }
+    .main { padding: 20px 16px 60px; }
+    .question-card { padding: 24px 20px; }
+    .topic-grid { grid-template-columns: repeat(2, 1fr); }
+    .filter-bar { padding: 10px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>MOD — PA Board Review</h1>
+    <p>Arcadia University · 150 Questions</p>
+  </div>
+  <div class="header-right">
+    <span id="progress-text">Q — / 150</span>
+    <div class="score-badge">
+      <div class="score-num" id="score-display">0</div>
+      <div class="score-label">Score</div>
+    </div>
+  </div>
+</div>
+<div class="progress-bar-wrap">
+  <div class="progress-bar-fill" id="progress-bar"></div>
+</div>
+
+<div class="filter-bar" id="filter-bar">
+  <button class="filter-btn active" onclick="filterCategory('All')">All Topics</button>
+  <button class="filter-btn" onclick="filterCategory('Dermatology')">Dermatology</button>
+  <button class="filter-btn" onclick="filterCategory('Hematology')">Hematology</button>
+  <button class="filter-btn" onclick="filterCategory('Cell Biology')">Cell Biology</button>
+  <button class="filter-btn" onclick="filterCategory('Neoplasia')">Neoplasia</button>
+  <button class="filter-btn" onclick="filterCategory('Bone Physiology')">Bone Physiology</button>
+  <button class="filter-btn" onclick="filterCategory('Acid-Base')">Acid-Base</button>
+</div>
+
+<div class="main">
+  <div id="start-screen">
+    <h2>Mechanisms of Disease</h2>
+    <p>PA Board-Style Practice Quiz</p>
+    <p style="margin-top:4px;">150 questions covering all exam topics. Each question includes a detailed explanation.</p>
+    <div class="topic-grid">
+      <div class="topic-item"><div class="topic-name">Dermatology</div><div class="topic-count">28 questions</div></div>
+      <div class="topic-item"><div class="topic-name">Hematology</div><div class="topic-count">32 questions</div></div>
+      <div class="topic-item"><div class="topic-name">Cell Biology</div><div class="topic-count">25 questions</div></div>
+      <div class="topic-item"><div class="topic-name">Neoplasia</div><div class="topic-count">30 questions</div></div>
+      <div class="topic-item"><div class="topic-name">Bone Physiology</div><div class="topic-count">18 questions</div></div>
+      <div class="topic-item"><div class="topic-name">Acid-Base</div><div class="topic-count">17 questions</div></div>
+    </div>
+    <button class="btn btn-gold" onclick="startQuiz()" style="font-size:1rem;padding:16px 48px;">Begin Quiz</button>
+  </div>
+
+  <div id="quiz-screen" style="display:none;">
+    <div class="question-card" id="question-card">
+      <div class="q-meta">
+        <span class="q-category" id="q-category">Category</span>
+        <span class="q-number" id="q-number">Question 1 of 150</span>
+      </div>
+      <div class="question-text" id="question-text">Loading...</div>
+      <div class="options" id="options-container"></div>
+      <div class="explanation" id="explanation"></div>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" id="prev-btn" onclick="prevQuestion()">← Previous</button>
+      <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()">Next →</button>
+    </div>
+  </div>
+
+  <div id="results-screen">
+    <h2>Quiz Complete!</h2>
+    <div class="final-score" id="final-score-display">0<span>/150</span></div>
+    <div class="grade-label" id="grade-label">—</div>
+    <div class="results-breakdown">
+      <div class="breakdown-item">
+        <div class="breakdown-num correct-color" id="correct-count">0</div>
+        <div class="breakdown-label">Correct</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="breakdown-num incorrect-color" id="incorrect-count">0</div>
+        <div class="breakdown-label">Incorrect</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="breakdown-num" id="pct-display" style="color:var(--teal)">0%</div>
+        <div class="breakdown-label">Percentage</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-gold" onclick="restartQuiz()">Retake Quiz</button>
+      <button class="btn btn-primary" onclick="reviewMissed()">Review Missed</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+// ==================== DERMATOLOGY (28) ====================
+{cat:"Dermatology",q:"Which layer of the epidermis is responsible for cell division and contains the 'stem cells' of the skin?",opts:["Stratum corneum","Stratum spinosum","Stratum basale","Stratum granulosum"],ans:2,exp:"The stratum basale (basal layer) is where mitosis occurs. Cells divide here and migrate upward through the layers. Keratinocytes, melanocytes, and Merkel cells are found here."},
+{cat:"Dermatology",q:"A patient presents with pruritic papules on the flexor surface of the wrists that appear purple and polygonal. Histology shows T-lymphocytes along the dermal-epidermal junction. What is the diagnosis?",opts:["Psoriasis","Lichen planus","Allergic contact dermatitis","Bullous pemphigoid"],ans:1,exp:"Lichen planus classically presents with the '4 Ps': Pruritic, Purple, Polygonal, Papules on flexor surfaces. Histology shows T-lymphocytes at the DEJ, colloid bodies, and 'sawtooth' rete ridges in chronic stages."},
+{cat:"Dermatology",q:"Which skin lesion is defined as flat, nonpalpable, hypopigmented, and less than 1 cm in diameter?",opts:["Patch","Macule","Papule","Vesicle"],ans:1,exp:"A macule is flat and nonpalpable, <1cm (e.g., freckle). A patch is the same but >1cm (e.g., vitiligo). Papules are raised <1cm. Vesicles are fluid-filled <1cm."},
+{cat:"Dermatology",q:"What cell in the spinous layer (stratum spinosum) serves as the first line of immunologic defense in the skin?",opts:["Melanocytes","Merkel cells","Langerhans cells","Keratinocytes"],ans:2,exp:"Langerhans cells are antigen-presenting cells in the spinous layer. They capture invaders, break them down, and present antigens to T cells to trigger an immune response."},
+{cat:"Dermatology",q:"A 70-year-old patient presents with tense blisters on the trunk and extremities that are less likely to rupture. What is the most likely diagnosis?",opts:["Pemphigus vulgaris","Bullous pemphigoid","Dermatitis herpetiformis","Spongiotic dermatitis"],ans:1,exp:"Bullous pemphigoid is an autoimmune blistering disease in elderly patients characterized by TENSE subepidermal blisters (less likely to rupture). Pemphigus vulgaris produces flaccid blisters due to intraepidermal acantholysis."},
+{cat:"Dermatology",q:"What is the most common skin cancer?",opts:["Squamous cell carcinoma","Melanoma","Basal cell carcinoma","Merkel cell carcinoma"],ans:2,exp:"Basal cell carcinoma (BCC) is the most common skin cancer. It is locally invasive but rarely metastasizes. It presents as a 'pearly' pink papule with telangiectasia and is associated with chronic sun exposure."},
+{cat:"Dermatology",q:"Psoriasis histologically demonstrates all of the following EXCEPT:",opts:["Parakeratosis","Elongated rete ridges","Acantholysis","Dilated superficial capillaries"],ans:2,exp:"Acantholysis (separation of keratinocytes) is NOT a feature of psoriasis — it is seen in bullous disorders. Psoriasis features: evenly elongated rete ridges, parakeratosis, hyperkeratosis, neutrophil accumulation, and dilated capillaries."},
+{cat:"Dermatology",q:"A patient develops an itchy rash after using a new metal wristwatch. Biopsy shows intracellular edema of the epidermis with separation of keratinocytes. What pattern is this?",opts:["Vasculitis","Panniculitis","Spongiotic dermatitis","Psoriasiform dermatitis"],ans:2,exp:"Spongiotic dermatitis features intracellular edema (spongiosis) with partial separation of keratinocytes — cells remain connected (unlike acantholysis). Classic example: allergic contact dermatitis (delayed type IV hypersensitivity)."},
+{cat:"Dermatology",q:"What is the key prognostic indicator for malignant melanoma?",opts:["Tumor width","Location on the body","Depth of invasion","Patient age"],ans:2,exp:"Depth of invasion (Breslow thickness) is the most important prognostic factor in melanoma. Vertical growth is worse than radial growth because it allows metastasis to lymph nodes and distant organs."},
+{cat:"Dermatology",q:"Actinic keratosis is considered precancerous because it may progress to:",opts:["Basal cell carcinoma","Squamous cell carcinoma","Melanoma","Merkel cell carcinoma"],ans:1,exp:"Actinic keratosis (AK) is a precancerous lesion on sun-exposed areas that can progress to squamous cell carcinoma (SCC). It features dysplasia of basal keratinocytes, parakeratosis, and a rough, sandpaper-like texture."},
+{cat:"Dermatology",q:"Erythema nodosum is classified as what type of skin inflammation?",opts:["Spongiotic","Perivascular","Panniculitis","Nodular"],ans:2,exp:"Erythema nodosum is panniculitis — inflammation of the subcutaneous fat. It presents as tender, red nodules on the anterior lower legs, more common in females (3:1), associated with infections, IBD, and medications."},
+{cat:"Dermatology",q:"In the coagulation cascade analogy, how is PRIMARY healing (first intention) best described?",opts:["Ulcers with extensive tissue loss","Clean incision with limited scarring","Wounds with unclean edges and granulation tissue","Always requiring skin grafting"],ans:1,exp:"Primary (first) intention healing occurs with clean incisions (surgical or simple cuts) and results in minimal scarring or wound contraction. Secondary intention involves ulcers/lacerations with unclean edges and produces more granulation tissue and scarring."},
+{cat:"Dermatology",q:"Which growth factor specifically stimulates blood vessel formation (angiogenesis) during wound healing?",opts:["EGF","PDGF","TGF-β","VEGF"],ans:3,exp:"VEGF (Vascular Endothelial Growth Factor) induces blood vessel formation. EGF stimulates granulation tissue. PDGF attracts fibroblasts. TGF-β is a growth inhibitor for epithelium."},
+{cat:"Dermatology",q:"The mnemonic 'Come Lets Get Some Beer Dude' refers to which structure?",opts:["Layers of the dermis","Layers of the epidermis from superficial to deep","Types of skin lesions","Stages of wound healing"],ans:1,exp:"C=Corneum, L=Lucidum, G=Granulosum, S=Spinosum, B=Basale, D=Dermis — the layers of the epidermis from superficial to deep."},
+{cat:"Dermatology",q:"Leukocytoclastic vasculitis presents with palpable purpura that:",opts:["Blanches with pressure","Does not blanch with pressure","Is limited to the face","Only occurs in children"],ans:1,exp:"Palpable purpura in LCV does NOT blanch — this is because the blood has extravasated outside the vessels. Blanching indicates blood still inside vessels (reactive hyperemia). LCV involves inflammatory neutrophil infiltration of small blood vessels."},
+{cat:"Dermatology",q:"What complication of wound healing involves permanent tightening of muscles, tendons, or skin that locks joints in a bent position?",opts:["Keloid","Dehiscence","Contracture","Ulcer"],ans:2,exp:"Contracture is permanent tightening/shortening of connective tissues causing joint stiffness. Keloid = hypertrophic scar. Dehiscence = wound reopening. Ulcers = loss of mucosa and deeper tissues."},
+{cat:"Dermatology",q:"Melanocytes are responsible for producing melanin. Which cell type do they transfer melanin to?",opts:["Langerhans cells","Merkel cells","Keratinocytes","Fibroblasts"],ans:2,exp:"Melanocytes produce melanin and transfer it to keratinocytes to protect against UV radiation. Melanocytes are found in the basal layer. They are responsible for skin color."},
+{cat:"Dermatology",q:"What histologic finding differentiates psoriasis from other skin conditions?",opts:["Acantholysis","Parakeratosis with evenly elongated rete ridges","Subepidermal blister","Granuloma formation"],ans:1,exp:"Psoriasis is characterized by parakeratosis (nuclei retained in cornified layer due to rapid turnover) with EVENLY elongated rete ridges. This combination is distinctive for psoriasis."},
+{cat:"Dermatology",q:"A patient with SCC (squamous cell carcinoma) of the skin demonstrates keratin pearls on biopsy. What does this finding indicate?",opts:["Benign tumor","Poorly differentiated","Evidence of keratin production by malignant squamous cells","Viral etiology"],ans:2,exp:"Keratin pearls are concentric whorls of squamous cells with central keratinization — a hallmark of SCC. They demonstrate that the malignant cells retain some ability to produce keratin. SCC has potential to invade and metastasize."},
+{cat:"Dermatology",q:"The granular layer of the epidermis is characterized by:",opts:["Active cell division","Formation of keratohyalin and lamellar granules; cells dying","T-lymphocyte accumulation","Maximum cell thickness"],ans:1,exp:"The granular layer contains 3–5 layers of flattened keratinocytes where keratohyalin and lamellar granules form (waterproof barrier). Cells are actively DYING here — nuclei and organelles disintegrate."},
+{cat:"Dermatology",q:"Which of the following is a direct role of the dermal-epidermal junction (DEJ)?",opts:["Site of melanin production","Provides mechanical support for the epidermis via rete ridges and dermal papillae","Location of primary cell division","Main site of UV absorption"],ans:1,exp:"The DEJ (basement membrane zone) provides mechanical support for the epidermis. Rete ridges project downward from epidermis; dermal papillae project upward from dermis — together they create a large surface area for nutrient exchange and structural integrity."},
+{cat:"Dermatology",q:"A patient presents with urticaria (hives). What is the primary mechanism?",opts:["IgG-mediated autoimmune attack on DEJ","Capillary vasodilation and fluid leaking into dermis due to allergic reaction","Neutrophil infiltration of subcutaneous fat","Acantholysis of keratinocytes"],ans:1,exp:"Urticaria involves capillary vasodilation causing pink hue, with fluid leaking into dermis and inflammation clustered around superficial layer. It is a perivascular pattern. No blisters are formed. 15–25% of population will experience hives."},
+{cat:"Dermatology",q:"What is the timeframe for the proliferation phase of wound healing?",opts:["0–24 hours","3–5 days","2 weeks","3 months"],ans:1,exp:"Wound healing phases: Hemostasis (immediate), Inflammation (0–24hrs, neutrophils), Proliferation (3–5 days, fill and cover wound), Maturation/Remodeling (2 weeks–3 months)."},
+{cat:"Dermatology",q:"Tobacco use impairs wound healing primarily by:",opts:["Increasing bacterial colonization","Inhibiting platelet function","Causing vasoconstriction (nicotine) that reduces blood/oxygen delivery","Blocking growth factor receptors"],ans:2,exp:"Nicotine is vasoconstrictive, reducing blood flow and oxygen delivery to the wound. Poor perfusion is a major impairment to healing. Other factors include diabetes, immunosuppression, malnutrition, and steroids."},
+{cat:"Dermatology",q:"Cutaneous sarcoidosis commonly presents as:",opts:["White vesicles on sun-exposed areas","Red-brown nodules, commonly on the face","Yellow plaques on the trunk","Tense bullae on extremities"],ans:1,exp:"Cutaneous sarcoidosis presents as red-brown nodules more common on the face. It is a nodular inflammation pattern. Sarcoidosis is a poorly understood systemic inflammatory disease with higher incidence in Black populations in the US."},
+{cat:"Dermatology",q:"A chickenpox lesion starts as which type of lesion before becoming a vesicle?",opts:["Patch","Pustule","Papule","Bulla"],ans:2,exp:"Chickenpox starts as papules, progresses to vesicles, then scabs over and exfoliates. Shingles and herpes start as vesicles and turn into pustules. Acne can present as papules, pustules, bullae, or vesicles."},
+{cat:"Dermatology",q:"Which type of necrosis is classically associated with tuberculosis and has a cheesy gross appearance?",opts:["Coagulative","Liquefactive","Caseous","Fat necrosis"],ans:2,exp:"Caseous necrosis occurs when the immune system cannot remove a foreign stimulus (e.g., TB), sealing it off with a granuloma. Gross morphology: yellow-white, soft, CHEESY appearance. Microscopy: granuloma with central necrosis and eosinophilia."},
+{cat:"Dermatology",q:"What is the function of Merkel cells in the skin?",opts:["Produce melanin","First-line immunologic defense","Epidermal sensory cells detecting light touch, connected to the nervous system","Regulate cell division in the basal layer"],ans:2,exp:"Merkel cells are epidermal sensory cells that detect light touch and are connected to the nervous system. Melanocytes produce melanin. Langerhans cells are immunologic. Keratinocytes make up the bulk of the epidermis."},
+{cat:"Dermatology",q:"Barrett's esophagus is an example of which cellular adaptation?",opts:["Hypertrophy","Metaplasia","Hyperplasia","Atrophy"],ans:1,exp:"Barrett's esophagus: squamous epithelium → columnar epithelium in response to chronic acid reflux (glandular metaplasia). Metaplasia = change in CELL TYPE when current epithelium cannot handle the environment."},
+
+// ==================== HEMATOLOGY (32) ====================
+{cat:"Hematology",q:"What is the correct order of WBC types from most abundant to least abundant?",opts:["Lymphocytes, Neutrophils, Monocytes, Eosinophils, Basophils","Neutrophils, Lymphocytes, Monocytes, Eosinophils, Basophils","Neutrophils, Monocytes, Lymphocytes, Basophils, Eosinophils","Eosinophils, Neutrophils, Lymphocytes, Monocytes, Basophils"],ans:1,exp:"NEVER LET MONKEYS EAT BANANAS: Neutrophils (55–70%), Lymphocytes (20–40%), Monocytes (2–8%), Eosinophils (1–4%), Basophils (0.5–1%). A reverse differential suggests mononucleosis or lymphocytic leukemia."},
+{cat:"Hematology",q:"Erythropoietin is released from which organ in response to low oxygen?",opts:["Liver","Kidneys","Spleen","Bone marrow"],ans:1,exp:"The kidneys release erythropoietin (EPO) in response to low circulating oxygen. EPO stimulates myeloid stem cells in the bone marrow to begin developing into RBCs. The liver produces hepcidin (iron regulation)."},
+{cat:"Hematology",q:"Which type of anemia is caused by autoimmune attack on parietal cells and results in neurological symptoms?",opts:["Iron deficiency anemia","Folate deficiency anemia","Pernicious anemia","Sickle cell anemia"],ans:2,exp:"Pernicious anemia: autoimmune attack on parietal cells (which make intrinsic factor) and/or intrinsic factor itself → B12 not absorbed in terminal ileum → macrocytic anemia + neurological symptoms (paresthesias, peripheral neuropathy, memory loss)."},
+{cat:"Hematology",q:"A patient on heparin develops thrombocytopenia AND new clots. What is happening?",opts:["Vitamin K deficiency from heparin","Disseminated intravascular coagulation","Heparin-induced thrombocytopenia (HIT)","Protein C deficiency"],ans:2,exp:"HIT is paradoxical: heparin binds PF4 → immune response → antibodies attack platelets via molecular mimicry → thrombocytopenia + paradoxically INCREASED clotting. Treat by STOPPING heparin and switching anticoagulants. Add heparin to allergy list!"},
+{cat:"Hematology",q:"What is the role of Transferrin?",opts:["Stores excess iron in the liver","Exports iron from intestinal cells into bloodstream","Transports iron through the blood to the bone marrow","Regulates iron absorption via hepcidin signaling"],ans:2,exp:"Transferrin is a blood-plasma glycoprotein that transports iron to bone marrow for new RBC production, and also to liver and spleen. Ferroportin exports iron from intestinal cells. Hepcidin regulates iron homeostasis."},
+{cat:"Hematology",q:"Which of the following is NOT a feature of iron deficiency anemia?",opts:["Koilonychia (spoon nails)","Pica","Glossitis with shiny tongue","Restless leg syndrome"],ans:2,exp:"Glossitis (shiny, inflamed tongue) is a feature of PERNICIOUS ANEMIA (B12 deficiency), not iron deficiency. Iron deficiency features: pica, koilonychia, cheilosis, restless leg syndrome, hair loss, brittle nails."},
+{cat:"Hematology",q:"What does a LOW reticulocyte count indicate?",opts:["Active hemolysis","Adequate iron stores","Insufficient iron or inadequate RBC production in bone marrow","Normal compensation for anemia"],ans:2,exp:"Low reticulocytes mean the bone marrow is NOT producing enough RBCs — indicates either insufficient iron, bone marrow failure, or B12/folate deficiency. High reticulocytes indicate the marrow is responding (e.g., to hemolysis or blood loss)."},
+{cat:"Hematology",q:"T cells mature in which organ?",opts:["Spleen","Liver","Thymus","Lymph nodes"],ans:2,exp:"T cells form in the bone marrow but mature in the Thymus (T = Thymus). Only 2–4% pass the self-tolerance screening. B cells form and mature in the bone marrow, then complete maturation in the Spleen."},
+{cat:"Hematology",q:"The intrinsic coagulation pathway mnemonic T-E-N-E-T corresponds to which factors?",opts:["1, 2, 3, 4, 5","7, 8, 9, 10, 11","12, 11, 9, 8, 10","3, 5, 7, 9, 11"],ans:2,exp:"TENET: Factors 12 → 11 → 9 → 8 → 10 (intrinsic/left side of cascade). Factor VII is on the EXTRINSIC pathway and is the most abundant and powerful. Common pathway: 10 → 2 → 1."},
+{cat:"Hematology",q:"Hemophilia A is a deficiency of which clotting factor?",opts:["Factor VII","Factor VIII","Factor IX","Factor X"],ans:1,exp:"Hemophilia A = Factor VIII deficiency. Hemophilia B = Factor IX deficiency. Both are X-linked recessive and primarily affect males. Von Willebrand factor is the carrier protein for Factor VIII."},
+{cat:"Hematology",q:"Virchow's Triad for DVT includes which three components?",opts:["Thrombocytopenia, vessel wall injury, hypertension","Venous stasis, vessel wall injury, hypercoagulable state","Anemia, tachycardia, low O2 saturation","Atrial fibrillation, venous stasis, anticoagulant use"],ans:1,exp:"Virchow's Triad: 1) Venous stasis (immobility, pooling), 2) Vessel wall injury (endothelial damage), 3) Hypercoagulable state (genetic defects, inflammation, smoking, hyperlipidemia)."},
+{cat:"Hematology",q:"A patient with DVT of the lower extremity would most likely present with:",opts:["Bilateral lower extremity swelling","Unilateral lower extremity swelling, calf pain, erythema, warmth","Bilateral calf pain with no swelling","Pleuritic chest pain and dyspnea"],ans:1,exp:"DVT: UNILATERAL swelling (key finding), calf pain, erythema, warmth. Bilateral swelling is more suggestive of systemic causes (heart failure, hypoalbuminemia). PE presents with pleuritic chest pain, dyspnea, hypoxia, tachypnea, tachycardia."},
+{cat:"Hematology",q:"Which coagulation factors are Vitamin K-dependent?",opts:["Factors 1, 3, 5, 8","Factors 2, 7, 9, 10 and Proteins C and S","Factors 4, 6, 8, 11","Factors 5, 8, 11, 13"],ans:1,exp:"Vitamin K-dependent factors: 2, 7, 9, 10 and Proteins C and S. This is why warfarin (Vit K antagonist) requires bridging with heparin — it also knocks out Proteins C and S (anticoagulants), initially making patients hypercoagulable."},
+{cat:"Hematology",q:"What is plasmin and what activates it?",opts:["A coagulation factor activated by thrombin","An enzyme that breaks up fibrin clots, activated by tPA","A protein that inhibits the clotting cascade","A complement protein that lyses cells"],ans:1,exp:"Plasmin is the enzyme that ACTUALLY breaks up blood clots. It is generated by tissue plasminogen activator (tPA). Plasmin cleaves fibrinogen, clotting factors, and plasma proteins. D-dimer is a fibrin degradation product monitored in blood work."},
+{cat:"Hematology",q:"Factor V Leiden causes hypercoagulability by:",opts:["Activating the extrinsic pathway","Making Factor V resistant to activated Protein C (APC)","Decreasing thrombin production","Increasing fibrinolysis"],ans:1,exp:"Factor V Leiden makes Factor V resistant or unresponsive to APC (activated Protein C), which normally inhibits the clotting cascade. This leads to recurrent venous clots (DVT, PE)."},
+{cat:"Hematology",q:"Which type of anemia has MCV >100?",opts:["Microcytic anemia (iron deficiency)","Normocytic anemia","Macrocytic anemia","Hemolytic anemia"],ans:2,exp:"Macrocytic = MCV >100 = problem with RBC DNA (B12 or folate deficiency). Microcytic = MCV <85 = problem with hemoglobin (iron deficiency). Normocytic = MCV 85–100 = decreased production."},
+{cat:"Hematology",q:"Eosinophils are primarily involved in:",opts:["Bacterial phagocytosis","Mediating allergic response and responding to parasitic infections","Producing and releasing histamine and serotonin","Secreting antibodies"],ans:1,exp:"Eosinophils (1–4%): mediate allergic response and respond to parasitic infections. Basophils produce histamine/serotonin. Neutrophils phagocytose bacteria. B cells secrete antibodies."},
+{cat:"Hematology",q:"What is the primary function of Antithrombin III?",opts:["Activates fibrinolysis via tPA","Inhibits Protein C","Acts on Factors 10 and 2 in the common pathway to stop clotting","Promotes platelet aggregation"],ans:2,exp:"Antithrombin III is a circulating enzyme inhibitor that acts on Factors 10 and 2 (common pathway) to stop clotting. TFPI acts on Factor 7 (extrinsic). Protein C (activated by thrombomodulin) inhibits Factors 5 and 8 (stops intrinsic pathway)."},
+{cat:"Hematology",q:"Von Willebrand Disease primarily impairs:",opts:["The extrinsic coagulation pathway only","Platelets' ability to attach to damaged vessel wall and Factor VIII activity","Red blood cell production","Fibrinolysis"],ans:1,exp:"Von Willebrand disease: vWF is the carrier protein for Factor VIII AND helps platelets attach to damaged vessel walls. Deficiency = impaired primary hemostasis (platelet plug) and reduced Factor VIII."},
+{cat:"Hematology",q:"A patient develops cyclic neutropenia. What is the genetic basis?",opts:["BRCA1 mutation","ELANE gene mutation","Factor V Leiden","JAK2 mutation"],ans:1,exp:"Cyclic neutropenia is caused by ELANE gene mutation, leading to abnormal neutrophil production. Neutrophil counts decrease significantly for 3–5 days every 3 weeks. Treatment: supportive (antibiotics if needed), G-CSF to stimulate marrow."},
+{cat:"Hematology",q:"Where is iron primarily absorbed in the GI tract?",opts:["Stomach","Duodenum","Terminal ileum","Colon"],ans:1,exp:"Iron is absorbed in the DUODENUM, regulated by hepcidin (made in the liver). Without hepcidin, iron is not absorbed → anemia. Ferroportin exports iron from intestinal cells into bloodstream. B12 is absorbed in the TERMINAL ILEUM."},
+{cat:"Hematology",q:"Bernard-Soulier syndrome is an example of which type of platelet disorder?",opts:["Thrombocytosis","Quantitative platelet disorder","Qualitative (functional) platelet disorder","DIC"],ans:2,exp:"Bernard-Soulier syndrome is a CONGENITAL qualitative (functional) platelet disorder along with Glanzmann thromboasthenia and storage pool disease. Acquired qualitative disorders include aspirin, NSAIDs, clopidogrel (Plavix), alcohol, uremia."},
+{cat:"Hematology",q:"Which two cell types are characteristic of CHRONIC inflammation (compared to the neutrophils of acute)?",opts:["Eosinophils and basophils","Neutrophils and plasma cells","Macrophages and lymphocytes","Mast cells and NK cells"],ans:2,exp:"Chronic inflammation is characterized by macrophages and lymphocytes, and involves simultaneous acute inflammation, tissue destruction, and repair. Caused by persistent irritants (TB, asbestos), viral infections, or autoimmune disease."},
+{cat:"Hematology",q:"Neutropenia from bone marrow failure, chemotherapy, or sepsis represents which type of leukopenia?",opts:["Lymphopenia","Eosinopenia","Neutropenia","Monocytopenia"],ans:2,exp:"Neutropenia (low neutrophils) causes: bone marrow failure, overwhelming sepsis, chemotherapy/radiation, genetic mutations. Lymphopenia causes: HIV, hepatitis, congenital disorders, chemotherapy. Eosinophilia (elevated): allergic/parasitic conditions."},
+{cat:"Hematology",q:"What does the extrinsic coagulation pathway primarily depend on?",opts:["Factor XII initiating the cascade","Tissue Factor (TF) activating Factor VII","Von Willebrand Factor binding collagen","Platelet plug formation alone"],ans:1,exp:"The EXTRINSIC pathway is activated by Tissue Factor (TF) released from injured vessel walls, which activates Factor VII. Factor VII is the most abundant and powerful clotting factor. The INTRINSIC pathway begins with Factor XII."},
+{cat:"Hematology",q:"Hepcidin, the main regulator of iron homeostasis, is produced by which organ?",opts:["Kidneys","Spleen","Liver","Small intestine"],ans:2,exp:"Hepcidin is produced by the LIVER. It regulates iron absorption from the GI tract. When hepcidin is absent/deficient, iron is not properly absorbed → anemia. It acts by blocking ferroportin function."},
+{cat:"Hematology",q:"Granulomatous inflammation involves which primary cell type?",opts:["Neutrophils","Collections of activated macrophages (epithelioid histiocytes)","Eosinophils","Mast cells"],ans:1,exp:"Granulomas = collections of activated macrophages (epithelioid histiocytes), often with multinucleated giant cells. They wall off persistent irritants (TB, foreign bodies, autoimmune conditions). Example: tuberculosis produces caseating granulomas."},
+{cat:"Hematology",q:"In primary hemostasis, TxA2 (thromboxane A2) and ADP function to:",opts:["Inhibit platelet aggregation","Activate the fibrinolytic system","Attract and aggregate additional platelets (prothrombotic)","Dissolve the fibrin clot"],ans:2,exp:"TxA2 and ADP are prothrombotic agents that attract and aggregate additional platelets to build the primary platelet plug. ASA (aspirin) works by inhibiting TxA2 → prevents platelet aggregation → increased blood flow."},
+{cat:"Hematology",q:"NK (natural killer) cells function primarily to:",opts:["Secrete antibodies","Present antigens to T cells","Lysis of infected or tumor cells","Produce histamine during allergic responses"],ans:2,exp:"NK cells lyse infected or tumor cells without prior sensitization. T cells: immunoregulation and cytotoxic killing. B cells: secrete antibodies. Mast cells/basophils: release histamine."},
+{cat:"Hematology",q:"Which of the following is a sign of PULMONARY EMBOLISM, not DVT?",opts:["Unilateral leg swelling","Calf pain and warmth","Dyspnea with pleuritic chest pain","Erythema over lower extremity"],ans:2,exp:"PE: dyspnea, pleuritic chest pain, hypoxia, tachypnea, tachycardia. DVT: unilateral lower extremity swelling (hallmark), calf pain, erythema, warmth. A DVT can travel to the lungs and become a PE."},
+{cat:"Hematology",q:"A patient with liver disease would have difficulty making clotting factors because:",opts:["The liver stores iron needed for clotting","All clotting factors except vWF and Factor VIII are synthesized in the liver","The liver destroys excess platelets","The liver produces erythropoietin"],ans:1,exp:"All clotting factors are synthesized in the LIVER (with exceptions: vWF from megakaryocytes/endothelial cells, Factor VIII from endothelial cells). Liver disease significantly impairs hemostasis. Vitamin K-dependent factors (2,7,9,10) are especially affected."},
+{cat:"Hematology",q:"What is Protein C's role in the coagulation cascade?",opts:["Activates Factor VII","Inhibits Factors 5 and 8 (stops intrinsic pathway)","Promotes platelet plug formation","Activates fibrinogen"],ans:1,exp:"Protein C (activated by thrombomodulin) inhibits Factors 5 and 8, thereby stopping the intrinsic pathway. It is Vitamin K dependent. Deficiency of Protein C or S leads to hypercoagulable states (recurrent DVTs/PEs)."},
+{cat:"Hematology",q:"The normal adult hemoglobin (HgbA) is composed of:",opts:["2 alpha and 2 delta chains","2 alpha and 2 gamma chains","2 alpha and 2 beta chains","4 gamma chains"],ans:2,exp:"Hemoglobin A (normal adult) = 2 alpha + 2 beta chains (makes up ~49% of blood). HbF (fetal) = 2 alpha + 2 gamma chains. HbS (sickle cell) has a point mutation in the beta chain."},
+
+// ==================== CELL BIOLOGY (25) ====================
+{cat:"Cell Biology",q:"Hyperplasia differs from hypertrophy in that:",opts:["Hyperplasia increases cell SIZE; hypertrophy increases cell NUMBER","Hypertrophy increases cell SIZE; hyperplasia increases cell NUMBER","Both describe the same process","Hyperplasia only occurs pathologically"],ans:1,exp:"Hypertrophy = ↑ cell SIZE (e.g., cardiac hypertrophy, skeletal muscle with exercise). Hyperplasia = ↑ cell NUMBER (e.g., endometrial hyperplasia, BPH). Both can increase organ size; microscopic exam needed to distinguish them."},
+{cat:"Cell Biology",q:"Barrett's esophagus develops when the squamous epithelium of the esophagus converts to columnar epithelium. This is an example of:",opts:["Hyperplasia","Hypertrophy","Metaplasia","Dysplasia"],ans:2,exp:"Metaplasia = change in cell TYPE when existing epithelium cannot handle the environment. Barrett's esophagus: squamous → columnar epithelium in response to gastric acid reflux. It is a precursor to esophageal adenocarcinoma."},
+{cat:"Cell Biology",q:"Apoptosis differs from necrosis in that apoptosis is:",opts:["Uncontrolled and triggers an inflammatory response","Caused only by external injury","Controlled/programmed cell death without triggering inflammation","Only seen in cancer cells"],ans:2,exp:"Apoptosis = controlled, programmed cell death that does NOT trigger inflammation. Phases: Initiation (caspase activation) and Execution (caspase-mediated death). Necrosis = uncontrolled cell death that DOES trigger inflammation."},
+{cat:"Cell Biology",q:"In the intrinsic pathway of apoptosis, what is released from mitochondria to activate caspases?",opts:["Cytochrome c","Fas ligand","TNF-alpha","Interleukin-1"],ans:0,exp:"Intrinsic apoptosis pathway: mitochondria release cytochrome c → combines with Apaf-1 → activates caspases → cell death. Extrinsic pathway: Fas ligand binds Fas receptor → activates FADD → activates caspases."},
+{cat:"Cell Biology",q:"Which type of necrosis is most commonly seen in the BRAIN?",opts:["Coagulative","Caseous","Fat necrosis","Liquefactive"],ans:3,exp:"Liquefactive necrosis occurs in the brain because the brain is lipid-rich and enzymatic breakdown causes it to become a liquid, viscous mass. All other solid organs typically undergo coagulative necrosis with ischemia."},
+{cat:"Cell Biology",q:"Coagulative necrosis is characterized by:",opts:["Loss of cellular architecture and liquefaction","Preserved cellular architecture with protein denaturation; dry, hard, yellow-white tissue","Cheesy, soft appearance due to granuloma","Chalky deposits in fat tissue"],ans:1,exp:"Coagulative necrosis (from ischemia/infarction): cellular architecture is PRESERVED initially (can still identify organ type), but proteins denature. Gross: dry, hard, yellow-white. Micro: increased eosinophilia, decreased basophilia. Occurs in any organ except brain."},
+{cat:"Cell Biology",q:"Benign prostatic hyperplasia (BPH) is an example of:",opts:["Physiologic hyperplasia","Pathologic hyperplasia","Physiologic hypertrophy","Metaplasia"],ans:1,exp:"BPH is pathologic hyperplasia driven by excess androgens (abnormal stimulus) causing increased cell number in the prostate. Physiologic hyperplasia examples: breast enlargement in pregnancy, liver regeneration after hepatectomy."},
+{cat:"Cell Biology",q:"What is Lipofuscin?",opts:["An exogenous pigment from tattoos","A 'wear-and-tear' pigment from incomplete lipid peroxidation accumulating in lysosomes","An iron storage compound in the liver","A calcium deposit in atherosclerosis"],ans:1,exp:"Lipofuscin is an endogenous 'wear-and-tear' pigment produced by incomplete lipid peroxidation that accumulates in lysosomes as cells age. Found in heart, liver, skin. Gross: brown discoloration. Micro: finely granular, yellow-brown, often surrounding the nucleus."},
+{cat:"Cell Biology",q:"Dystrophic calcification occurs in which situation?",opts:["High serum calcium in normal tissue","Normal serum calcium with calcium deposits in ABNORMAL/necrotic tissue","Vitamin D intoxication","Sarcoidosis causing hypercalcemia"],ans:1,exp:"Dystrophic calcification = NORMAL calcium levels + deposits in ABNORMAL tissue (necrosis, TB, atheroma, fat necrosis). Metastatic calcification = HYPERCALCEMIA (elevated PTH, vitamin D toxicity, renal failure, sarcoidosis) causing deposits in normal tissue."},
+{cat:"Cell Biology",q:"Which cellular accumulation is associated with Alzheimer's disease?",opts:["Lipofuscin deposits","Iron accumulation (hemosiderosis)","Neurofibrillary tangles (protein aggregation)","Cholesterol foam cells"],ans:2,exp:"Alzheimer's: neurofibrillary tangles = abnormal cytoskeletal protein accumulation. Mallory hyaline (alcoholic liver): intermediate filament accumulation. Amyloidosis: abnormal protein aggregation staining eosinophilic/pink on Congo red."},
+{cat:"Cell Biology",q:"Hemochromatosis is distinguished from hemosiderosis by:",opts:["The type of iron involved","Hemochromatosis causes organ dysfunction (DM, cirrhosis); hemosiderosis does not","Hemosiderosis only affects the brain","The presence or absence of hepcidin"],ans:1,exp:"Hemosiderosis = iron accumulation WITHOUT side effects. Hemochromatosis = iron accumulation in parenchymal cells WITH side effects (diabetes mellitus, cirrhosis). Organs affected: liver, skin, pancreas, heart. Color: dark brown on gross, blue on Prussian blue stain."},
+{cat:"Cell Biology",q:"Which of the following causes of cell injury operates via generation of oxygen-derived free radicals?",opts:["Immunosuppression","UV light, ionizing radiation, smoking","Vitamin deficiency","Iron overload only"],ans:1,exp:"Free radicals are generated by UV light, ionizing radiation, smoking/pollution, inflammation, and oxidative stress. They are chemically unstable and react with other molecules to cause damage to DNA, cell membranes, and proteins."},
+{cat:"Cell Biology",q:"The four vulnerable cellular systems in cell injury are:",opts:["DNA, cell membranes, protein generation, and ATP production","Ribosomes, mitochondria, Golgi apparatus, nucleus","Cell surface receptors, cytoskeleton, lysosomes, nucleus","Plasma membrane, endoplasmic reticulum, mitochondria, ribosomes"],ans:0,exp:"Cell injury targets: DNA (mutations), cell membranes (loss of integrity), protein generation (denaturation), and ATP production (energy failure). These are the key vulnerable systems. Hypoxia particularly targets ATP production."},
+{cat:"Cell Biology",q:"What is Metastatic calcification most commonly caused by?",opts:["Dystrophic changes in old scars","Hypercalcemia from hyperparathyroidism, Vit D toxicity, renal failure, or sarcoidosis","Trauma to adipose tissue","Bacterial infection"],ans:1,exp:"Metastatic calcification = elevated serum calcium (hypercalcemia) → deposits in NORMAL tissue. Causes of hypercalcemia: ↑ PTH, bone tumor destruction, Vitamin D intoxication, renal failure, sarcoidosis. Organs affected: vasculature, kidneys, lungs."},
+{cat:"Cell Biology",q:"Telomeres serve what primary function, and what happens to them with each cell division?",opts:["Facilitate protein synthesis; they replicate fully each division","Protect chromosomal integrity; they shorten progressively with each division","Store RNA; they lengthen with stress","Anchor chromosomes to nuclear envelope; they thicken with age"],ans:1,exp:"Telomeres (TTAGGG repeats) are specialized structures at chromosome ends that maintain chromosomal integrity. They shorten with each cell division until the cell becomes senescent or dies. Telomerase mutations are linked to aging disorders (dyskeratosis congenita, progeria)."},
+{cat:"Cell Biology",q:"Mallory hyaline bodies in the liver are associated with:",opts:["Viral hepatitis B","Hemochromatosis","Alcoholism/fatty liver disease (intermediate filament accumulation)","Sarcoidosis"],ans:2,exp:"Mallory hyaline = eosinophilic, pink, rope-like intermediate filament deposits in hepatocytes, associated with alcoholic liver disease and non-alcoholic fatty liver disease (steatosis). Gross: yellow discoloration. Micro: clear vacuoles within cells (fat droplets)."},
+{cat:"Cell Biology",q:"Reversible cell injury is characterized by which change?",opts:["Nuclear degradation and loss of nuclei","Rupture of cell membrane","Chromatin clumping and bleb formation (membrane blebs)","Karyolysis and karyorrhexis"],ans:2,exp:"Reversible injury: chromatin clumping and membrane bleb formation. The cell CAN recover. Irreversible injury: rupture, nuclear degradation (loss of nuclei), karyolysis, karyorrhexis — the cell CANNOT recover and will die."},
+{cat:"Cell Biology",q:"Which cellular adaptation occurs in the uterus during pregnancy (involves BOTH processes)?",opts:["Metaplasia and atrophy","Hyperplasia and hypertrophy","Atrophy and metaplasia","Dysplasia and hyperplasia"],ans:1,exp:"The uterus during pregnancy undergoes BOTH hyperplasia (↑ cell number) AND hypertrophy (↑ cell size). The heart in aortic stenosis undergoes only hypertrophy. Skeletal muscle with exercise = hypertrophy. Liver regeneration = compensatory hyperplasia."},
+{cat:"Cell Biology",q:"Anthracotic (carbon) pigment in the lungs comes from:",opts:["Hemoglobin breakdown","Carbon from cigarette smoke, environmental pollution, or coal dust — an exogenous pigment","Lipid peroxidation byproducts","Bilirubin metabolism"],ans:1,exp:"Anthracotic pigment is an EXOGENOUS pigment (carbon) from cigarette smoke, environmental pollution, or coal dust. It accumulates in pleural lymphatics. Gross: black. Micro: finely stippled black in interstitial and alveolar macrophages."},
+{cat:"Cell Biology",q:"The acute inflammatory vascular phase involves which initial sequence?",opts:["Immediate vasodilation followed by vasoconstriction","Temporary vasoconstriction → then vasodilation with increased permeability","Immediate increase in vascular permeability without any constriction","Only lymphatic vessel changes"],ans:1,exp:"Vascular phase: temporary vasoconstriction (prevents blood loss) → vasodilation (mediated by histamine, prostacyclin, nitric oxide) → increased vascular permeability → leukocytes marginate at vessel wall → edema."},
+{cat:"Cell Biology",q:"The phase of leukocyte migration involving PECAM (CD31) mediating WBC crossing through the endothelial layer is called:",opts:["Margination","Rolling","Adhesion","Transmigration"],ans:3,exp:"Steps of leukocyte migration: Margination (approach wall) → Rolling (selectins) → Adhesion (integrins) → TRANSMIGRATION (PECAM/CD31) → Chemotaxis (C5a, LTB4, IL-8) → Phagocytosis."},
+{cat:"Cell Biology",q:"What does an abscess represent as an outcome of acute inflammation?",opts:["Resolution with complete tissue repair","Loss of mucosa","Pus (neutrophils + necrotic debris) at the site of infection","Abnormal connection between organs"],ans:2,exp:"Abscess = pus (neutrophils + necrotic debris) at the inflammatory site. Caused by impaired host defenses, trauma, obstruction, or foreign body. Complications: pain, fever, swelling, rupture. Fistula = abnormal connection between organs."},
+{cat:"Cell Biology",q:"Endometrial hyperplasia is a pathologic adaptation driven by:",opts:["Decreased estrogen","Increased estrogen (abnormal stimulus)","Progesterone deficiency","Autoimmune attack on endometrium"],ans:1,exp:"Endometrial hyperplasia is caused by excessive estrogen stimulation (abnormal stimulus) → increased number of glandular epithelial cells → can lead to bleeding and risk of endometrial carcinoma. BPH is caused by excess androgens."},
+{cat:"Cell Biology",q:"Bilirubin accumulation leads to which clinical finding?",opts:["Brown discoloration of the liver","Jaundice (yellowing of skin/eyes) and potentially kernicterus in the brain","Black pigmentation in lungs","White chalky deposits in the pancreas"],ans:1,exp:"Bilirubin is produced from RBC breakdown and excreted via bile and urine. Hyperbilirubinemia (hemolysis, obstruction, genetic disorders, drugs) → jaundice (yellow skin/eyes). In neonates → kernicterus (brain damage from bilirubin deposition)."},
+{cat:"Cell Biology",q:"Fat (steatosis) accumulation in the liver can be seen with all of the following EXCEPT:",opts:["Alcohol use","Non-alcoholic fatty liver disease","Diabetes mellitus","Vitamin K deficiency"],ans:3,exp:"Hepatic steatosis (fat accumulation) is seen with alcohol use, NAFLD, DM, and obesity. It indicates reversible damage or intrinsic fat metabolism abnormality. Vitamin K deficiency causes coagulopathy, NOT liver steatosis."},
+
+// ==================== NEOPLASIA (30) ====================
+{cat:"Neoplasia",q:"Malignant neoplasms differ from benign in all of the following ways EXCEPT:",opts:["Malignant tumors are poorly differentiated","Malignant tumors metastasize","Malignant tumors have higher mitotic rates","Malignant tumors are always symptomatic at diagnosis"],ans:3,exp:"Malignant neoplasms are NOT always symptomatic — the pre-clinical phase may be identified only by screening. Differences: malignant = poorly differentiated, invasive, metastatic, rapid growth; benign = well differentiated, localized, encapsulated, slow growth."},
+{cat:"Neoplasia",q:"What is the function of tumor suppressor genes and how are they inactivated?",opts:["They promote cell growth; activated by amplification","They inhibit cell growth ('braking signal'); inactivated by mutation, deletion, or methylation","They repair DNA; activated by oncogenes","They regulate apoptosis exclusively; inactivated by phosphorylation"],ans:1,exp:"Tumor suppressor genes = 'braking signals' that control cell growth and prevent tumor formation. When inactivated (mutation, deletion, methylation), they lose tumor suppression. Key examples: p53, BRCA1/2, APC."},
+{cat:"Neoplasia",q:"KRAS oncogene mutations are associated with cancers of the:",opts:["Breast, thyroid, and prostate","Lung, colon, and pancreas","Liver, spleen, and kidney","Brain, bone, and skin"],ans:1,exp:"KRAS is mutated in lung, colon, and pancreatic cancers. RAS mutations account for many malignant neoplasms including colon cancers. HER2 (growth factor receptor) is associated with breast cancer. BRCA1/2 = breast and ovarian."},
+{cat:"Neoplasia",q:"Carcinoma in situ is defined as:",opts:["Full invasion through the basement membrane","Full thickness dysplasia of the epithelium that has NOT yet invaded through the basement membrane","Any malignant tumor","Stage IV cancer with distant metastasis"],ans:1,exp:"Carcinoma in situ = FULL THICKNESS dysplasia of the epithelium, but it has NOT broken through any boundaries between tissues. It is a precursor to invasive malignancy. Compare to dysplasia, which is partial thickness and potentially reversible."},
+{cat:"Neoplasia",q:"Hepatitis B virus (HBV) is associated with which cancer?",opts:["MALToma","Kaposi sarcoma","Hepatocellular carcinoma","Primary effusion lymphoma"],ans:2,exp:"HBV → Hepatocellular carcinoma (HBV protein binds p53 and interferes with its function). H. pylori → MALToma of the stomach. HHV-8 → Kaposi sarcoma AND primary effusion lymphoma."},
+{cat:"Neoplasia",q:"What distinguishes Staging from Grading of tumors?",opts:["Grading describes spread; staging describes cell appearance","Staging describes the EXTENT OF SPREAD (TNM or I–IV); grading describes the APPEARANCE of tumor cells (differentiation)","They are the same concept","Staging is only used for benign tumors"],ans:1,exp:"GRADING = appearance/behavior of tumor cells based on differentiation (well → poorly differentiated). STAGING = extent and spread (TNM: tumor size, node involvement, metastasis; or Numerical I–IV). Pathologic staging (post-surgical) is more accurate than clinical staging."},
+{cat:"Neoplasia",q:"Familial Adenomatous Polyposis (FAP) is caused by a mutation in which gene?",opts:["BRCA1","TP53","APC (tumor suppressor gene)","KRAS"],ans:2,exp:"FAP is caused by a mutated APC (tumor suppressor gene) → numerous colonic polyps → colon cancer at very young age. Lynch Syndrome (HNPCC) is caused by MSH2 or MLH1 mutations (DNA mismatch repair genes) → fewer polyps, later onset."},
+{cat:"Neoplasia",q:"Lambert-Eaton syndrome is a paraneoplastic syndrome most commonly associated with:",opts:["Breast carcinoma","Small cell carcinoma of the lung","Colon carcinoma","Hodgkin lymphoma"],ans:1,exp:"Lambert-Eaton syndrome is a myasthenia gravis-like syndrome (muscle weakness, absent reflexes) produced as a paraneoplastic effect of small cell carcinoma of the lung. It involves antibodies against voltage-gated calcium channels at the neuromuscular junction."},
+{cat:"Neoplasia",q:"Which characteristic is associated with a HIGH-GRADE (poorly differentiated) tumor?",opts:["Cells closely resemble normal tissue; slow growth","Cells appear primitive, lack features of origin; rapid growth and high metastatic potential","Intermediate behavior and prognosis","Well-circumscribed with a capsule"],ans:1,exp:"High-grade (poorly differentiated): cells appear primitive, lack features of original tissue, grow rapidly, with high metastatic potential — poor prognosis. Low-grade (well differentiated): cells resemble normal tissue, grow slowly — better prognosis."},
+{cat:"Neoplasia",q:"Anaplasia refers to:",opts:["Full thickness epithelial dysplasia","Cells losing specialized characteristics and reverting to a primitive embryonic state","Programmed cell death","Normal increase in cell number"],ans:1,exp:"Anaplasia = 'to form backward' — malignant cells lose their specialized characteristics and revert to a primitive, undifferentiated state. This is seen in high-grade malignant tumors. It indicates poor differentiation."},
+{cat:"Neoplasia",q:"HER2 oncogene overexpression is primarily associated with which cancer?",opts:["Prostate cancer","Hepatocellular carcinoma","Breast cancer","Colon cancer"],ans:2,exp:"HER2 is a growth factor receptor overexpressed in breast cancer. KRAS = colon/lung/pancreatic. RAS = general colon cancer. BRCA1/2 (tumor suppressor) = breast/ovarian. HER2-positive breast cancer can be targeted with trastuzumab (Herceptin)."},
+{cat:"Neoplasia",q:"What is Cachexia in the context of neoplasia?",opts:["A type of paraneoplastic hypercalcemia","Weight gain due to tumor mass","Loss of body fat, muscle, weakness, and anorexia associated with cancer","Local invasion of the tumor into adjacent tissue"],ans:2,exp:"Cachexia = loss of body fat and muscle, weakness, and anorexia associated with a neoplasm. It is an indirect (paraneoplastic) effect of malignancy, often mediated by tumor-released cytokines (TNF-α, IL-6). It can occur even with small tumors."},
+{cat:"Neoplasia",q:"Sarcomas are derived from which embryonic origin?",opts:["Ectodermal tissue (epithelium)","Endodermal tissue","Mesodermal tissue (connective tissue: fat, cartilage, bone)","All three germ layers equally"],ans:2,exp:"Sarcoma = mesodermal origin (connective tissue: fat, cartilage, bone, muscle). More common in CHILDREN and often aggressive. Carcinoma = ectodermal/endodermal (epithelial) origin; most common cancer type; more common in ADULTS."},
+{cat:"Neoplasia",q:"The progression of normal colon epithelium to colon carcinoma involves which key genetic sequence?",opts:["RAS → TP53 → APC → KRAS","APC loss → KRAS activation → TP53 loss","HER2 amplification → BRCA mutation → TP53","Random mutations with no specific sequence"],ans:1,exp:"Colon cancer progression: APC loss (early adenoma) → KRAS activation (intermediate adenoma) → TP53 loss (late adenoma → carcinoma). This stepwise model is supported by FAP (APC mutation) and Lynch syndrome (DNA mismatch repair)."},
+{cat:"Neoplasia",q:"Pleomorphism as a histologic feature of malignancy refers to:",opts:["Increased mitotic figures","Variation in nuclear and cytoplasmic shape between cells","Hyperchromasia (dark staining nuclei)","Hypercellularity with loss of normal polarity"],ans:1,exp:"Pleomorphism = variation in nuclear and cytoplasmic SHAPE between cells. Other histologic features of malignancy: abnormal/increased mitotic figures, hyperchromasia (↑ DNA, dark staining), hypercellularity with loss of polarity."},
+{cat:"Neoplasia",q:"A tumor that produces PTH-related protein causes which paraneoplastic syndrome?",opts:["Polycythemia","Cushing syndrome","Hyponatremia (SIADH)","Hypercalcemia"],ans:3,exp:"PTH or PTH-related protein produced by tumors → hypercalcemia. ACTH production → Cushing syndrome. SIADH → hyponatremia. Erythropoietin production → polycythemia. These are all paraneoplastic indirect effects."},
+{cat:"Neoplasia",q:"Lynch Syndrome (HNPCC) is caused by mutations in which type of gene?",opts:["Proto-oncogenes (KRAS, HER2)","DNA mismatch repair genes (MSH2, MLH1)","Tumor suppressor genes (APC)","Apoptosis-regulating genes (Bcl-2)"],ans:1,exp:"Lynch Syndrome (HNPCC) is caused by mutations in DNA mismatch repair genes (MSH2 or MLH1) → microsatellite instability → colon cancer at older age with fewer polyps than FAP."},
+{cat:"Neoplasia",q:"Cancer cells evading apoptosis is enabled by mutations in:",opts:["Tumor suppressor genes only","Apoptosis-regulating genes (e.g., Bcl-2 overexpression) that prevent programmed cell death","Only viral oncogenes","Proto-oncogenes exclusively"],ans:1,exp:"Apoptosis genes regulate programmed cell death. When mutated, damaged cells evade apoptosis and accumulate further mutations → cancer. Bcl-2 is an anti-apoptotic protein overexpressed in follicular lymphoma."},
+{cat:"Neoplasia",q:"What defines the 'pre-clinical phase' of cancer?",opts:["Stage IV metastatic disease","Phase where patient has no symptoms or physical findings consistent with disease; may be identified by screening","Any cancer in remission","Cancer that cannot be treated"],ans:1,exp:"The pre-clinical phase = no demonstrable symptoms or physical findings. May be identified by SCREENING (colon polyps on colonoscopy, breast abnormalities on mammogram). This is why screening is critical for early cancer detection."},
+{cat:"Neoplasia",q:"Lymphomas are derived from which cell type?",opts:["Immature myeloid cells","Mature lymphocytes affecting lymph nodes and blood","Epithelial cells","Connective tissue cells"],ans:1,exp:"Lymphomas: derived from MATURE lymphocytes; affect lymph nodes and blood (e.g., Hodgkin and Non-Hodgkin lymphomas). Leukemias: derived from IMMATURE lymphocytes; affect blood and bone marrow (e.g., AML, CML)."},
+{cat:"Neoplasia",q:"Proto-oncogenes become activated oncogenes through all of the following EXCEPT:",opts:["Gene overexpression","Gene amplification","Point mutation","Methylation (gene silencing)"],ans:3,exp:"Methylation INACTIVATES tumor suppressor genes (not activates oncogenes). Proto-oncogenes are activated by: overexpression, amplification, point mutation, translocation to a region with a strong promoter."},
+{cat:"Neoplasia",q:"Helicobacter pylori infection is associated with which malignancy?",opts:["Hepatocellular carcinoma","MALToma (mucosa-associated lymphoid tissue lymphoma) of the stomach","Kaposi sarcoma","Cervical carcinoma"],ans:1,exp:"H. pylori → MALToma of the stomach (mucosa-associated lymphoid tissue lymphoma). HBV → hepatocellular carcinoma. HHV-8 → Kaposi sarcoma. HPV → cervical carcinoma (not covered in these notes but clinically important)."},
+{cat:"Neoplasia",q:"P53 tumor suppressor gene is inactivated in many cancers. What does p53 normally do?",opts:["Promotes cell division under normal conditions","Repairs DNA damage or initiates apoptosis when DNA is irreparable","Promotes angiogenesis in tumors","Activates KRAS signaling"],ans:1,exp:"p53 ('guardian of the genome') repairs DNA damage OR leads to apoptosis when DNA is irreparably damaged. When p53 is inactivated (mutated/deleted): cells cannot repair DNA or undergo apoptosis → mutations accumulate → cancer. Inactivated in many leukemias."},
+{cat:"Neoplasia",q:"Hyperchromasia as a histologic feature of malignancy indicates:",opts:["Fewer cells than normal","Increased DNA material in the nucleus causing dark staining","Loss of cell polarity","Protein deposits in cytoplasm"],ans:1,exp:"Hyperchromasia = increased DNA material in the nucleus → stains dark on H&E. It is one of the classic histologic features of malignancy. Other features: pleomorphism, abnormal mitoses, hypercellularity with loss of polarity."},
+{cat:"Neoplasia",q:"What does BRCA1 and BRCA2 normally do in the cell?",opts:["Stimulate cell growth via growth factor receptors","Involved in DNA repair; mutations lead to breast and ovarian cancers","Encode growth factors like PDGF","Regulate the extrinsic apoptosis pathway"],ans:1,exp:"BRCA1 and BRCA2 are tumor suppressor genes involved in DNA repair. When mutated, DNA damage accumulates → breast and ovarian cancers. BRCA2 mutations also increase risk of pancreatic and prostate cancer."},
+{cat:"Neoplasia",q:"Metastasis via lymphatics is more characteristic of carcinoma, while metastasis via blood is more characteristic of:",opts:["Lymphoma","Carcinoma (both lymphatic and hematogenous)","Sarcoma","Dysplastic lesions"],ans:2,exp:"Carcinoma spreads via LYMPHATICS. Sarcoma spreads via BLOOD (hematogenous). This distinction matters clinically — sarcomas often metastasize to the lungs early via hematogenous spread."},
+{cat:"Neoplasia",q:"The 'direct effects' of malignancy include all of the following EXCEPT:",opts:["Bone marrow involvement causing pancytopenia","Lambert-Eaton syndrome from small cell lung cancer","Brain masses causing neurological deficits","Bowel obstruction from an obstructing mass"],ans:1,exp:"Lambert-Eaton syndrome is an INDIRECT (paraneoplastic) effect. DIRECT effects include: bone marrow involvement (pancytopenia), brain masses (neuro deficits), nerve invasion (pain/weakness), vessel invasion (hemorrhage/ischemia), obstructing masses."},
+{cat:"Neoplasia",q:"Which statement about the phenotypic progression of neoplasia is correct?",opts:["Normal → carcinoma in situ → hyperplasia → dysplasia → invasive cancer","Normal → hyperplasia → dysplasia → carcinoma in situ → invasive malignant cancer","Normal → metaplasia → apoptosis → malignancy","Normal → atrophy → neoplasia → invasive cancer"],ans:1,exp:"Phenotypic progression: Normal cell → genetic mutation → hyperplasia (too much division) → dysplasia (abnormal shape) → carcinoma in situ (full thickness, not yet invasive) → invasive malignant cancer (breaks through basement membrane, can metastasize)."},
+{cat:"Neoplasia",q:"TNM staging in cancer refers to:",opts:["Type, Number, Metastasis","Tumor size, Node involvement, Metastasis","Treatment, Necrosis, Mitoses","Tissue, Neoplasm, Microscopy"],ans:1,exp:"TNM = Tumor size, Node involvement (lymph node), Metastasis (distant). Clinical staging is based on presentation/exam; pathologic staging is done after surgical resection and is more ACCURATE. Numerical staging: I–IV based on extent of disease."},
+{cat:"Neoplasia",q:"Which cancer is associated with the t(9;22) Philadelphia chromosome translocation involving BCR-ABL?",opts:["Burkitt lymphoma","Acute Promyelocytic Leukemia","Chronic Myelogenous Leukemia (CML)","Follicular lymphoma"],ans:2,exp:"CML is associated with the Philadelphia chromosome t(9;22) translocation creating the BCR-ABL fusion oncogene (constitutively active tyrosine kinase). This is targeted by imatinib (Gleevec). Though not explicitly in these notes, it is high-yield for PA boards."},
+
+// ==================== BONE PHYSIOLOGY (18) ====================
+{cat:"Bone Physiology",q:"What are the five functions of bone? (mnemonic: PSMBC)",opts:["Pressure sensing, Secretion, Metabolism, Blood filtration, Cholesterol storage","Protection, Support, Mechanical movement, Blood cell production, Calcium/phosphate storage","Protein synthesis, Support, Movement, Blood pressure regulation, Calcium excretion","Proprioception, Strength, Mobility, Bone remodeling, Calcium absorption"],ans:1,exp:"PSMBC = 'Please Support My Body's Cells': Protection (vital organs), Support (body cavities), Mechanical movement, Blood cell production (hematopoiesis in medullary cavity), Calcium/phosphate storage."},
+{cat:"Bone Physiology",q:"In osteoporosis, which type of bone is lost first?",opts:["Compact (cortical) bone","Both equally","Periosteal bone","Spongy (trabecular/cancellous) bone"],ans:3,exp:"Spongy (trabecular) bone is lost FIRST in osteoporosis because it is more metabolically active. This is why vertebral compression fractures occur early — vertebrae have a high proportion of trabecular bone."},
+{cat:"Bone Physiology",q:"Which bones form via intramembranous ossification (NO cartilage model)?",opts:["Femur, tibia, humerus","Skull, clavicle, mandible","Vertebrae, ribs","All long bones"],ans:1,exp:"Intramembranous ossification: mesenchyme DIRECTLY converts to bone WITHOUT a cartilage model. Bones: skull, clavicle, mandible. Endochondral ossification: cartilage scaffold replaced by bone (ALL long bones, most other bones)."},
+{cat:"Bone Physiology",q:"The epiphyseal growth plate persists until approximately what age?",opts:["Age 10","Age 15","Age 18","Adolescence to early adulthood (~age 25)"],ans:3,exp:"The epiphyseal growth plate persists through adolescence and early adulthood (~age 25), then fuses leaving an epiphyseal line (scar). Osteogenesis begins at weeks 6–7 of embryonic life. After fusion, longitudinal bone growth stops."},
+{cat:"Bone Physiology",q:"Wolff's Law states that:",opts:["Bone length is determined by growth plate activity","Trabeculae align with mechanical stress forces; bone remodels in response to mechanical loads","Osteoclasts always outnumber osteoblasts in normal bone","All bone derives from ectoderm"],ans:1,exp:"Wolff's Law: bone remodels in response to mechanical loads placed upon it; trabeculae align with mechanical stress forces. This is why weight-bearing exercise strengthens bone and immobilization leads to bone loss."},
+{cat:"Bone Physiology",q:"PTH (parathyroid hormone) is released in response to low calcium and acts to:",opts:["Inhibit osteoclasts and decrease calcium","Stimulate osteoclasts to release Ca2+ from bone, increase renal Ca2+ reabsorption, and stimulate calcitriol production","Directly deposit calcium into bone","Increase phosphate reabsorption in the kidney"],ans:1,exp:"PTH (released when Ca2+ is low): stimulates OSTEOCLAST activity (bone resorption → releases Ca2+), increases renal Ca2+ reabsorption, decreases phosphate reabsorption, and stimulates 1-alpha-hydroxylase in the kidney to produce active calcitriol."},
+{cat:"Bone Physiology",q:"Calcitonin is released from which cells in response to HIGH calcium?",opts:["Parathyroid chief cells","Thyroid parafollicular (C) cells","Adrenal cortex","Osteoblasts"],ans:1,exp:"Calcitonin is released from thyroid PARAFOLLICULAR (C) cells when calcium is HIGH. It INHIBITS osteoclast activity → decreases bone resorption → lowers blood calcium. It is the physiologic ANTAGONIST to PTH."},
+{cat:"Bone Physiology",q:"Vitamin D deficiency in children causes which bone disease?",opts:["Osteoporosis","Paget's disease","Rickets","Osteomalacia"],ans:2,exp:"Vitamin D deficiency → RICKETS in children (soft, bowed bones; defective mineralization). In adults → osteomalacia (soft bones, bone pain). Osteoporosis = decreased QUANTITY of bone (normal mineralization). Different concept from rickets/osteomalacia."},
+{cat:"Bone Physiology",q:"What is the difference between Osteoporosis and Osteomalacia?",opts:["Osteoporosis = too much bone; Osteomalacia = too little","Osteoporosis = decreased QUANTITY (density) with normal mineralization; Osteomalacia = defective MINERALIZATION (soft bones, Vitamin D deficiency)","They are the same condition","Osteomalacia occurs only in children"],ans:1,exp:"Osteoporosis: decreased bone QUANTITY (normal mineralization, reduced density); bone is normal but there's less of it. Osteomalacia (adults)/Rickets (children): defective MINERALIZATION — bone is present but not properly calcified → soft bones."},
+{cat:"Bone Physiology",q:"Sesamoid bones are:",opts:["Only found in the skull","Found only at the wrist and ankle joints","Embedded in tendons; reduce wear and change the angle of muscle pull (e.g., patella)","Irregular bones found in the spine"],ans:2,exp:"Sesamoid bones are embedded in tendons. They reduce friction/wear and change the angle of muscle pull. The patella is the LARGEST sesamoid bone. Clinically: chondromalacia patella, patellar tendinopathy."},
+{cat:"Bone Physiology",q:"Short bones are found exclusively at which locations in the body?",opts:["Skull and pelvis","Spine and ribs","Wrist (carpals) and ankle (tarsals)","Sternum and clavicle"],ans:2,exp:"Short bones (cuboidal shape) are found ONLY at the wrist (carpals) and ankle (tarsals). Long bones: femur, humerus. Flat bones: skull (protective). Irregular bones: vertebrae, facial bones. Sesamoid: patella."},
+{cat:"Bone Physiology",q:"A Salter-Harris fracture is significant because it involves:",opts:["Avulsion of a tendon from bone","The diaphysis of a long bone","The growth plate (epiphyseal plate) in a pediatric patient","A pathologic fracture through a tumor"],ans:2,exp:"Salter-Harris fractures involve the GROWTH PLATE (epiphyseal plate) in pediatric patients, classified I–V by degree of involvement. They are important because damage to the growth plate can impair longitudinal bone growth."},
+{cat:"Bone Physiology",q:"What is the primary role of Osteoclasts?",opts:["Synthesize and deposit new bone matrix (osteoid)","Maintain mature bone embedded in matrix","Resorb/break down bone; multinucleated cells derived from monocyte lineage","Sense mechanical load and regulate remodeling via sclerostin"],ans:2,exp:"Osteoclasts: resorb bone (break down bone matrix). They are multinucleated cells derived from the monocyte lineage. They are activated by PTH (indirectly) and RANKL. Osteoblasts: form bone. Osteocytes: mature, embedded cells that sense mechanical load."},
+{cat:"Bone Physiology",q:"During endochondral ossification, the PRIMARY ossification center forms in which part of the bone?",opts:["Epiphysis","Diaphysis (shaft)","Periosteum","Articular cartilage"],ans:1,exp:"Primary ossification center = DIAPHYSIS (shaft), beginning at 2–3 months of intrauterine life. SECONDARY ossification centers form at the EPIPHYSES (bone ends) during childhood. The metaphysis is the zone of active ossification between them."},
+{cat:"Bone Physiology",q:"Compact bone makes up approximately what percentage of skeletal weight?",opts:["20%","50%","80%","95%"],ans:2,exp:"Compact (cortical) bone makes up ~80% of total skeletal weight. It forms the dense outer shell providing mechanical strength and protection. Spongy (trabecular) bone is the inner, lighter, metabolically active component — the first to be lost in osteoporosis."},
+{cat:"Bone Physiology",q:"All bone derives from which embryonic tissue?",opts:["Ectoderm","Endoderm","Mesenchyme (embryonic connective tissue)","Notochord"],ans:2,exp:"ALL bone derives from MESENCHYME (embryonic connective tissue). Two pathways: intramembranous ossification (mesenchyme directly → bone) and endochondral ossification (mesenchyme → cartilage scaffold → bone). Osteogenesis begins at weeks 6–7 of embryonic life."},
+{cat:"Bone Physiology",q:"Which of the following best describes the Metaphysis?",opts:["The bone end containing secondary ossification centers","The remnant scar left after growth plate fusion","The flared zone of active ossification between the diaphysis and epiphysis","The outer fibrous layer of bone"],ans:2,exp:"Metaphysis = the flared zone of active ossification BETWEEN the diaphysis and epiphysis. It is the most common site for primary bone tumors (osteosarcoma) in adolescents. The epiphyseal LINE is the remnant scar after the growth plate fuses."},
+{cat:"Bone Physiology",q:"Calcitriol (active Vitamin D) primarily acts to:",opts:["Inhibit intestinal calcium absorption","Increase intestinal Ca2+ AND phosphate absorption; deficiency → rickets/osteomalacia","Stimulate osteoclast activity directly","Decrease renal calcium reabsorption"],ans:1,exp:"Active Vitamin D (calcitriol = 1,25-dihydroxyvitamin D): increases intestinal absorption of BOTH calcium and phosphate → proper bone mineralization. Deficiency: rickets (children) or osteomalacia (adults). Produced in the kidney via 1-alpha-hydroxylase (stimulated by PTH)."},
+
+// ==================== ACID-BASE (17) ====================
+{cat:"Acid-Base",q:"The normal arterial blood pH range is:",opts:["7.25–7.35","7.35–7.45","7.45–7.55","7.30–7.50"],ans:1,exp:"Normal arterial blood pH = 7.35–7.45. pH <7.35 = acidemia. pH >7.45 = alkalemia. The body prefers a slightly alkalotic state. Even small deviations can cause significant physiologic effects."},
+{cat:"Acid-Base",q:"In the Henderson-Hasselbalch equation, if pCO2 is 40 and HCO3– is 24, the calculated pH is:",opts:["7.0","7.2","7.4","7.6"],ans:2,exp:"pH = 6.1 + log(24 / [0.03 × 40]) = 6.1 + log(24/1.2) = 6.1 + log(20) = 6.1 + 1.3 = 7.4. This confirms the normal values produce a normal pH of 7.4."},
+{cat:"Acid-Base",q:"A patient with COPD retaining CO2 would develop which acid-base disorder?",opts:["Metabolic alkalosis","Respiratory alkalosis","Respiratory acidosis","Metabolic acidosis"],ans:2,exp:"CO2 retention (hypoventilation) = RESPIRATORY ACIDOSIS: pH <7.35, pCO2 >45. The kidneys compensate by retaining HCO3– over time. Other causes: opioid overdose, neuromuscular disease, sleep apnea."},
+{cat:"Acid-Base",q:"A patient hyperventilating from anxiety would develop which disorder?",opts:["Respiratory acidosis","Metabolic alkalosis","Respiratory alkalosis","Metabolic acidosis"],ans:2,exp:"Hyperventilation blows off CO2 (↓pCO2) → RESPIRATORY ALKALOSIS: pH >7.45, pCO2 <35. Kidneys compensate by excreting HCO3–. Other causes: pain, PE, hypoxia, pregnancy, anxiety."},
+{cat:"Acid-Base",q:"A patient with severe vomiting develops which acid-base disorder?",opts:["Metabolic acidosis (loss of HCO3–)","Respiratory acidosis","Metabolic alkalosis (loss of HCl)","Respiratory alkalosis"],ans:2,exp:"Vomiting causes loss of gastric acid (HCl) → METABOLIC ALKALOSIS: pH >7.45, HCO3– >26. Compensation: lungs hypoventilate to retain CO2. Other causes: diuretics (lose H+), excessive antacid use."},
+{cat:"Acid-Base",q:"Kussmaul breathing (deep, rapid respirations) is a compensatory response to:",opts:["Respiratory alkalosis","Metabolic alkalosis","Metabolic acidosis","Respiratory acidosis"],ans:2,exp:"Metabolic acidosis (pH <7.35, HCO3– <22) triggers Kussmaul breathing — deep, rapid respirations to BLOW OFF CO2 and raise pH. Common causes: DKA, lactic acidosis, diarrhea (loss of HCO3–), renal failure."},
+{cat:"Acid-Base",q:"In acidosis, what happens to potassium levels?",opts:["Potassium moves INTO cells, causing hypokalemia","Potassium moves OUT of cells (in exchange for H+), causing hyperkalemia","Potassium is unaffected by pH changes","Potassium is excreted by the kidneys, causing hypokalemia"],ans:1,exp:"In acidosis: H+ moves INTO cells → K+ moves OUT of cells → HYPERKALEMIA. In alkalosis: H+ moves OUT of cells → K+ moves IN → HYPOKALEMIA. This inverse relationship between H+ and K+ is critical for ABG interpretation."},
+{cat:"Acid-Base",q:"Which ABG values are MEASURED vs. CALCULATED?",opts:["pH and HCO3– are measured; pCO2 is calculated","pH, pCO2, and pO2 are MEASURED; HCO3– is CALCULATED","All four are measured directly","Only pO2 is measured; the rest are calculated"],ans:1,exp:"MEASURED: pH (via pH electrode), pCO2 (CO2 electrode), pO2 (O2 electrode). CALCULATED: HCO3– is derived from the Henderson-Hasselbalch equation using measured pH and pCO2. This is a commonly tested fact."},
+{cat:"Acid-Base",q:"The bicarbonate buffer system formula is pH = 6.1 + log([HCO3–] / [0.03 × pCO2]). What does the 0.03 represent?",opts:["The normal HCO3– concentration","The pKa of carbonic acid","The solubility coefficient of CO2 in blood plasma at 37°C","The normal pCO2 value"],ans:2,exp:"0.03 is the solubility coefficient of CO2 gas in blood plasma at 37°C. pKa = 6.1 (acid dissociation constant of the bicarbonate buffer system). If pCO2 = 40 and HCO3– = 24, pH = 6.1 + log(20) = 7.4."},
+{cat:"Acid-Base",q:"A patient with diarrhea loses bicarbonate in stool. This would cause:",opts:["Metabolic alkalosis","Respiratory acidosis","Metabolic acidosis","Respiratory alkalosis"],ans:2,exp:"Diarrhea causes loss of HCO3– from the GI tract → METABOLIC ACIDOSIS (pH <7.35, HCO3– <22). Compensation: lungs hyperventilate (Kussmaul breathing) to lower pCO2. Other causes: DKA, lactic acidosis, renal failure."},
+{cat:"Acid-Base",q:"In a mixed acid-base disorder, what would you expect if a patient has BOTH metabolic acidosis AND respiratory acidosis?",opts:["pH might be normal due to perfect compensation","pH would be severely decreased (both driving pH down) with no appropriate compensation","pH would be elevated","pH would be slightly below normal with maximal compensation"],ans:1,exp:"A MIXED disorder = two primary disturbances occurring simultaneously. If both metabolic acidosis AND respiratory acidosis are present, the pH would be severely LOW because BOTH processes are driving H+ upward — there is no compensatory mechanism counteracting both."},
+{cat:"Acid-Base",q:"The -osis vs -emia distinction is best explained by:",opts:["They are interchangeable terms","-osis refers to the PROCESS in body fluids; -emia refers to the actual pH measurement in arterial blood","-emia refers to the primary disturbance; -osis refers to compensation","-osis is for respiratory; -emia is for metabolic"],ans:1,exp:"-OSIS (acidosis/alkalosis) = a process — excess acid or base in BODY FLUIDS. -EMIA (acidemia/alkalemia) = the actual measured arterial blood pH value. Compare: 'anemia' is diagnosed by a number; alkalemia means pH >7.45 measured in blood."},
+{cat:"Acid-Base",q:"The kidneys' compensatory response to respiratory acidosis is to:",opts:["Hyperventilate to blow off CO2","Retain HCO3– (increase bicarbonate reabsorption) to raise pH","Excrete HCO3– to lower pH","Excrete potassium to balance acid load"],ans:1,exp:"In respiratory acidosis (high CO2, low pH): KIDNEYS compensate by retaining (reabsorbing) HCO3– → raises pH toward normal. This is a slow compensation (days). Immediate compensation: the bicarbonate buffer system partially buffers the excess H+."},
+{cat:"Acid-Base",q:"Winter's formula (Expected pCO2 = 1.5 × HCO3– + 8 ± 2) is used to assess compensation in:",opts:["Respiratory acidosis","Metabolic alkalosis","Metabolic acidosis","Respiratory alkalosis"],ans:2,exp:"Winter's formula assesses respiratory compensation in metabolic acidosis. If actual pCO2 < expected = additional respiratory alkalosis. If actual pCO2 > expected = additional respiratory acidosis. It helps identify mixed disorders."},
+{cat:"Acid-Base",q:"A patient has pH 7.50, pCO2 25, HCO3– 20. What is the primary disorder?",opts:["Metabolic alkalosis","Respiratory acidosis with metabolic compensation","Respiratory alkalosis (high pH, LOW pCO2 — hyperventilation)","Metabolic acidosis"],ans:2,exp:"pH >7.45 = alkalemia. Low pCO2 (25 < 40) = primary respiratory alkalosis (hyperventilation blowing off CO2). Low HCO3– (20 < 24) = renal compensation (excreting HCO3– to try to lower pH). This is respiratory alkalosis with appropriate renal compensation."},
+{cat:"Acid-Base",q:"In the buffering system, the kidneys regulate which component, while the lungs regulate which?",opts:["Lungs regulate HCO3–; kidneys regulate CO2","Kidneys regulate BASE (HCO3–); lungs regulate ACID (CO2/H2CO3)","Both regulate CO2 equally","Kidneys regulate pH directly; lungs regulate HCO3–"],ans:1,exp:"pH ∝ Base (kidney/HCO3–) / Acid (lungs/CO2). Kidneys: slow compensation (hours–days), regulate bicarbonate. Lungs: fast compensation (minutes), regulate CO2. When one fails, the other 'pulls harder' to maintain equilibrium."},
+{cat:"Acid-Base",q:"A patient with DKA (diabetic ketoacidosis) would present with which combination?",opts:["High pH, high HCO3–, high pCO2","Low pH, low HCO3–, low pCO2 (compensatory hyperventilation)","Low pH, high HCO3–, high pCO2","High pH, low HCO3–, low pCO2"],ans:1,exp:"DKA = metabolic acidosis: LOW pH (<7.35), LOW HCO3– (ketoacid consumes bicarbonate), LOW pCO2 (compensatory Kussmaul breathing hyperventilates to blow off CO2). The body tries to raise pH by reducing the acid (CO2) component."}
+];
+
+let currentIndex = 0;
+let score = 0;
+let answered = {};
+let filteredQuestions = [...ALL_QUESTIONS];
+let activeCategory = 'All';
+let quizMode = false;
+
+function filterCategory(cat) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  activeCategory = cat;
+  if (cat === 'All') {
+    filteredQuestions = [...ALL_QUESTIONS];
+  } else {
+    filteredQuestions = ALL_QUESTIONS.filter(q => q.cat === cat);
+  }
+  answered = {};
+  score = 0;
+  currentIndex = 0;
+  updateScore();
+  if (quizMode) loadQuestion();
+}
+
+function startQuiz() {
+  quizMode = true;
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  loadQuestion();
+}
+
+function loadQuestion() {
+  if (currentIndex >= filteredQuestions.length) {
+    showResults();
+    return;
+  }
+  const q = filteredQuestions[currentIndex];
+  const card = document.getElementById('question-card');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = 'fadeUp 0.3s ease';
+
+  document.getElementById('q-category').textContent = q.cat;
+  document.getElementById('q-number').textContent = `Question ${currentIndex + 1} of ${filteredQuestions.length}`;
+  document.getElementById('question-text').textContent = q.q;
+
+  const container = document.getElementById('options-container');
+  container.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.onclick = () => selectAnswer(i);
+    if (answered[currentIndex] !== undefined) {
+      btn.disabled = true;
+      const chosen = answered[currentIndex];
+      if (i === q.ans) btn.classList.add('correct');
+      else if (i === chosen && chosen !== q.ans) btn.classList.add('incorrect');
+      else if (chosen !== q.ans && i === q.ans) btn.classList.add('show-correct');
+    }
+    container.appendChild(btn);
+  });
+
+  const exp = document.getElementById('explanation');
+  if (answered[currentIndex] !== undefined) {
+    exp.innerHTML = `<strong>Explanation:</strong> ${filteredQuestions[currentIndex].exp}`;
+    exp.classList.add('show');
+  } else {
+    exp.classList.remove('show');
+  }
+
+  updateProgress();
+  document.getElementById('prev-btn').disabled = currentIndex === 0;
+  document.getElementById('next-btn').textContent = currentIndex === filteredQuestions.length - 1 ? 'Finish →' : 'Next →';
+}
+
+function selectAnswer(selected) {
+  if (answered[currentIndex] !== undefined) return;
+  const q = filteredQuestions[currentIndex];
+  answered[currentIndex] = selected;
+  if (selected === q.ans) score++;
+  updateScore();
+
+  const options = document.querySelectorAll('.option');
+  options.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.ans) btn.classList.add('correct');
+    else if (i === selected && selected !== q.ans) btn.classList.add('incorrect');
+  });
+
+  const exp = document.getElementById('explanation');
+  exp.innerHTML = `<strong>Explanation:</strong> ${q.exp}`;
+  exp.classList.add('show');
+}
+
+function nextQuestion() {
+  if (currentIndex < filteredQuestions.length - 1) {
+    currentIndex++;
+    loadQuestion();
+  } else {
+    showResults();
+  }
+}
+
+function prevQuestion() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    loadQuestion();
+  }
+}
+
+function updateProgress() {
+  const pct = ((currentIndex + 1) / filteredQuestions.length) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `Q ${currentIndex + 1} / ${filteredQuestions.length}`;
+}
+
+function updateScore() {
+  document.getElementById('score-display').textContent = score;
+}
+
+function showResults() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  document.getElementById('results-screen').style.display = 'block';
+  const total = filteredQuestions.length;
+  const pct = Math.round((score / total) * 100);
+  const wrong = total - Object.values(answered).filter((a, i) => a === filteredQuestions[i]?.ans).length;
+  const actualWrong = Object.keys(answered).length - score;
+  document.getElementById('final-score-display').innerHTML = `${score}<span>/${total}</span>`;
+  document.getElementById('correct-count').textContent = score;
+  document.getElementById('incorrect-count').textContent = actualWrong;
+  document.getElementById('pct-display').textContent = pct + '%';
+  let grade, color;
+  if (pct >= 90) { grade = 'Excellent — Board Ready!'; color = 'var(--teal)'; }
+  else if (pct >= 80) { grade = 'Great Work — Keep Reviewing'; color = 'var(--green)'; }
+  else if (pct >= 70) { grade = 'Good — Focus on Weak Areas'; color = 'var(--gold)'; }
+  else { grade = 'Keep Studying — You Got This!'; color = 'var(--red)'; }
+  const gl = document.getElementById('grade-label');
+  gl.textContent = grade;
+  gl.style.color = color;
+}
+
+function restartQuiz() {
+  answered = {};
+  score = 0;
+  currentIndex = 0;
+  filteredQuestions = activeCategory === 'All' ? [...ALL_QUESTIONS] : ALL_QUESTIONS.filter(q => q.cat === activeCategory);
+  updateScore();
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  loadQuestion();
+}
+
+function reviewMissed() {
+  const missed = filteredQuestions.filter((q, i) => answered[i] !== undefined && answered[i] !== q.ans);
+  if (missed.length === 0) {
+    alert('No missed questions to review — perfect score!');
+    return;
+  }
+  filteredQuestions = missed;
+  answered = {};
+  score = 0;
+  currentIndex = 0;
+  updateScore();
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  loadQuestion();
+}
+</script>
+</body>
+</html>
+FLASHCARDS
+echo "Done"
